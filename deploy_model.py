@@ -14,7 +14,7 @@ label_mapping = {
     3: 'Lost Customers',
     4: 'Lowest-Spending Active Loyal Customers',
     5: 'High-Spending New Customers',
-    # Add more mappings as needed
+
 }
 
 # Function to perform prediction based on selected model and input data
@@ -45,7 +45,7 @@ def product_format_func(x):
     return products[x]
 
 # Slider for most bought product
-most_bought_product = st.select_slider(
+most_bought_product = st.selectbox(
     'Most Bought Product',
     options=list(range(len(products))),
     format_func=product_format_func
