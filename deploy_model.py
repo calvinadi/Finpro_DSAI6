@@ -60,42 +60,62 @@ frequency = st.number_input('Frequency', min_value=0, max_value=1000, value=0)
 monetary = st.number_input('Monetary', min_value=0, max_value=9999999, value=0)
 
 
+# #mean dan std untuk normalisasi
+# mean_refund = 219645.656946
+# std_refund = 138415.960681
 
-#mean dan std untuk normalisasi
-mean_refund = 219645.656946
-std_refund = 138415.960681
+# mean_wallet_balance = 635833.2
+# std_wallet_balance = 244845
 
-mean_wallet_balance = 635833.2
-std_wallet_balance = 244845
+# mean_total_gross_amount = 1455557
+# std_total_gross_amount = 356688.3
 
-mean_total_gross_amount = 1455557
-std_total_gross_amount = 356688.3
+# mean_total_discount_amount = 312150.6
+# std_total_discount_amount = 147689.6
 
-mean_total_discount_amount = 312150.6
-std_total_discount_amount = 147689.6
-
-mean_monetary = 1903694
-std_monetary = 316727.8
+# mean_monetary = 1903694
+# std_monetary = 316727.8
 
 
-# Normalize input based on test set statistics
-normalized_refund = (refund - mean_refund) / std_refund
-normalized_wallet_balance = (wallet_balance - mean_wallet_balance) / std_wallet_balance
-normalized_total_gross_amount = (total_gross_amount - mean_total_gross_amount) / std_total_gross_amount
-normalized_total_discount_amount = (total_discount_amount - mean_total_discount_amount) / std_total_discount_amount
-normalized_monetary = (monetary - mean_monetary) / std_monetary
+# # Normalize input based on test set statistics
+# normalized_refund = (refund - mean_refund) / std_refund
+# normalized_wallet_balance = (wallet_balance - mean_wallet_balance) / std_wallet_balance
+# normalized_total_gross_amount = (total_gross_amount - mean_total_gross_amount) / std_total_gross_amount
+# normalized_total_discount_amount = (total_discount_amount - mean_total_discount_amount) / std_total_discount_amount
+# normalized_monetary = (monetary - mean_monetary) / std_monetary
 
-# Prepare input data for prediction
-input_data = np.array([[gender, normalized_refund, normalized_wallet_balance, 
-                        most_bought_product,normalized_total_gross_amount, 
-                        normalized_total_discount_amount, recency, 
-                        frequency, normalized_monetary]])
+# # Prepare input data for prediction
+# input_data = np.array([[gender, normalized_refund, normalized_wallet_balance, 
+#                         most_bought_product,normalized_total_gross_amount, 
+#                         normalized_total_discount_amount, recency, 
+#                         frequency, normalized_monetary]])
+
+from sklearn.preprocessing import MinMaxScaler
+
+min_max_scaler = joblib.load('min_max_scaler.joblib')
+std_scaler = joblib.load('std_scaler.joblib')
+
+
+input_data = np.array([[gender, refund, wallet_balance, most_bought_product,
+                        total_gross_amount, total_discount_amount, recency, frequency, monetary]])
+
+
+# Extract the 5 features to normalize with MinMaxScaler
+features_to_minmax_scale = input_data[:, [1, 2, 4, 5, 8]]  # refund, wallet_balance, total_gross_amount, total_discount_amount, monetary
+
+# Perform MinMax scaling on the selected features
+input_data_minmax_scaled = min_max_scaler.transform(features_to_minmax_scale)
+
+# Replace the scaled features in input_data with the scaled values
+input_data[:, [1, 2, 4, 5, 8]] = input_data_minmax_scaled.reshape(-1, 5)
+
+input_data_std_scaled = std_scaler.transform(input_data)
 
 # Perform prediction on button click
 if st.button('Predict'):
     if model_choice == 'XGBoost':
-        result = predict(loaded_xgb, input_data)
+        result = predict(loaded_xgb, input_data_std_scaled)
     elif model_choice == 'Decision Tree':
-        result = predict(loaded_dt, input_data)
+        result = predict(loaded_dt, input_data_std_scaled)
 
     st.write(f'Prediction: {result}')
