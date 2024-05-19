@@ -1,5 +1,6 @@
 import streamlit as st
 import joblib
+import pandas as pd
 import numpy as np
 
 # Load your models
@@ -99,17 +100,15 @@ std_scaler = joblib.load('std_scaler.joblib')
 input_data = np.array([[gender, refund, wallet_balance, most_bought_product,
                         total_gross_amount, total_discount_amount, recency, frequency, monetary]])
 
+columns = ['gender_encoded', 'refund', 'wallet_balance', 'most_bought_product',
+           'total_gross_amount', 'total_discount_amount', 'recency', 'frequency', 'monetary']
+input_df = pd.DataFrame(input_data, columns=columns)
 
-# Extract the 5 features to normalize with MinMaxScaler
-features_to_minmax_scale = input_data[:, [1, 2, 4, 5, 8]]  # refund, wallet_balance, total_gross_amount, total_discount_amount, monetary
+# Apply MinMaxScaler to the relevant features
+features_to_minmax_scale = ['refund', 'wallet_balance', 'total_gross_amount', 'total_discount_amount', 'monetary']
+input_df[features_to_minmax_scale] = min_max_scaler.transform(input_df[features_to_minmax_scale])
 
-# Perform MinMax scaling on the selected features
-input_data_minmax_scaled = min_max_scaler.transform(features_to_minmax_scale)
-
-# Replace the scaled features in input_data with the scaled values
-input_data[:, [1, 2, 4, 5, 8]] = input_data_minmax_scaled.reshape(-1, 5)
-
-input_data_std_scaled = std_scaler.transform(input_data)
+input_data_std_scaled = std_scaler.transform(input_df)
 
 # Perform prediction on button click
 if st.button('Predict'):
