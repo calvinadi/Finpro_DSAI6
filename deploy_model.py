@@ -70,13 +70,15 @@ monetary = st.number_input('Monetary', min_value=0, max_value=9999999, value=0)
 input_data = np.array([[gender, refund, wallet_balance, most_bought_product,
                         total_gross_amount, total_discount_amount, recency, frequency, monetary]])
 
-# Normalisasi dan standarisasi input_data sesuai dengan skala yang sudah ditentukan
-input_data_normalized = min_max_scaler.transform(input_data)  # Normalisasi dengan MinMaxScaler
-input_data_standardized = std_scaler.transform(input_data_normalized)  # Standarisasi dengan StandardScaler
 
 
 # Perform prediction on button click
 if st.button('Predict'):
+
+    # Normalisasi dan standarisasi input_data sesuai dengan skala yang sudah ditentukan
+    input_data_normalized = min_max_scaler.transform(input_data)  # Normalisasi dengan MinMaxScaler
+    input_data_standardized = std_scaler.transform(input_data_normalized)  # Standarisasi dengan StandardScaler
+
     if model_choice == 'XGBoost':
         result = predict(loaded_xgb, input_data_standardized)
     elif model_choice == 'Decision Tree':
