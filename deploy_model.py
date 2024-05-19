@@ -6,10 +6,6 @@ import numpy as np
 loaded_xgb = joblib.load('xgb_model.joblib')
 loaded_dt = joblib.load('decision_tree_model.joblib')
 
-#load the scalers
-min_max_scaler = joblib.load('min_max_scaler.joblib')
-std_scaler = joblib.load('std_scaler.joblib')
-
 # Label mapping
 label_mapping = {
     0: 'At-Risk Customers',
@@ -23,10 +19,7 @@ label_mapping = {
 
 # Function to perform prediction based on selected model and input data
 def predict(model, input_data):
-    # Transformasi input_data sesuai dengan skala yang sudah ditentukan
-    input_data_normalized = min_max_scaler.transform(input_data)  # Normalisasi dengan MinMaxScaler
-    input_data_standardized = std_scaler.transform(input_data_normalized)  # Standarisasi dengan StandardScaler
-    prediction = model.predict(input_data_standardized)
+    prediction = model.predict(input_data)
     predicted_label = label_mapping.get(prediction[0], 'Others')  # Default to 'Others' if not found
     return predicted_label
 
@@ -66,22 +59,43 @@ recency = st.number_input('Recency', min_value=0, max_value=1000, value=0)
 frequency = st.number_input('Frequency', min_value=0, max_value=1000, value=0)
 monetary = st.number_input('Monetary', min_value=0, max_value=9999999, value=0)
 
+
+
+#mean dan std untuk normalisasi
+mean_refund = 219645.656946
+std_refund = 138415.960681
+
+mean_wallet_balance = 635833.2
+std_wallet_balance = 244845
+
+mean_total_gross_amount = 1455557
+std_total_gross_amount = 356688.3
+
+mean_total_discount_amount = 312150.6
+std_total_discount_amount = 147689.6
+
+mean_monetary = 1903694
+std_monetary = 316727.8
+
+
+# Normalize input based on test set statistics
+normalized_refund = (refund - mean_refund) / std_refund
+normalized_wallet_balance = (wallet_balance - mean_wallet_balance) / std_wallet_balance
+normalized_total_gross_amount = (total_gross_amount - mean_total_gross_amount) / std_total_gross_amount
+normalized_total_discount_amount = (total_discount_amount - mean_total_discount_amount) / std_total_discount_amount
+normalized_monetary = (monetary - mean_monetary) / std_monetary
+
 # Prepare input data for prediction
-input_data = np.array([[gender, refund, wallet_balance, most_bought_product,
-                        total_gross_amount, total_discount_amount, recency, frequency, monetary]])
-
-
+input_data = np.array([[gender, normalized_refund, normalized_wallet_balance, 
+                        most_bought_product,normalized_total_gross_amount, 
+                        normalized_total_discount_amount, recency, 
+                        frequency, normalized_monetary]])
 
 # Perform prediction on button click
 if st.button('Predict'):
-
-    # Normalisasi dan standarisasi input_data sesuai dengan skala yang sudah ditentukan
-    input_data_normalized = min_max_scaler.transform(input_data)  # Normalisasi dengan MinMaxScaler
-    input_data_standardized = std_scaler.transform(input_data_normalized)  # Standarisasi dengan StandardScaler
-
     if model_choice == 'XGBoost':
-        result = predict(loaded_xgb, input_data_standardized)
+        result = predict(loaded_xgb, input_data)
     elif model_choice == 'Decision Tree':
-        result = predict(loaded_dt, input_data_standardized)
+        result = predict(loaded_dt, input_data)
 
     st.write(f'Prediction: {result}')
