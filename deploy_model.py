@@ -6,6 +6,10 @@ import numpy as np
 loaded_xgb = joblib.load('xgb_model.joblib')
 loaded_dt = joblib.load('decision_tree_model.joblib')
 
+#load the scalers
+min_max_scaler = joblib.load('min_max_scaler.joblib')
+std_scaler = joblib.load('std_scaler.joblib')
+
 # Label mapping
 label_mapping = {
     0: 'At-Risk Customers',
@@ -19,7 +23,10 @@ label_mapping = {
 
 # Function to perform prediction based on selected model and input data
 def predict(model, input_data):
-    prediction = model.predict(input_data)
+    # Transformasi input_data sesuai dengan skala yang sudah ditentukan
+    input_data_normalized = min_max_scaler.transform(input_data)  # Normalisasi dengan MinMaxScaler
+    input_data_standardized = std_scaler.transform(input_data_normalized)  # Standarisasi dengan StandardScaler
+    prediction = model.predict(input_data_standardized)
     predicted_label = label_mapping.get(prediction[0], 'Others')  # Default to 'Others' if not found
     return predicted_label
 
@@ -63,11 +70,16 @@ monetary = st.number_input('Monetary', min_value=0, max_value=9999999, value=0)
 input_data = np.array([[gender, refund, wallet_balance, most_bought_product,
                         total_gross_amount, total_discount_amount, recency, frequency, monetary]])
 
+# Normalisasi dan standarisasi input_data sesuai dengan skala yang sudah ditentukan
+input_data_normalized = min_max_scaler.transform(input_data)  # Normalisasi dengan MinMaxScaler
+input_data_standardized = std_scaler.transform(input_data_normalized)  # Standarisasi dengan StandardScaler
+
+
 # Perform prediction on button click
 if st.button('Predict'):
     if model_choice == 'XGBoost':
-        result = predict(loaded_xgb, input_data)
+        result = predict(loaded_xgb, input_data_standardized)
     elif model_choice == 'Decision Tree':
-        result = predict(loaded_dt, input_data)
+        result = predict(loaded_dt, input_data_standardized)
 
     st.write(f'Prediction: {result}')
