@@ -3,6 +3,9 @@ import joblib
 import pandas as pd
 import numpy as np
 
+# Load the cleaned data
+df = pd.read_csv(r'/workspaces/Finpro_DSAI6/cleaned_df.csv')
+
 # Load your models
 loaded_xgb = joblib.load('xgb_model.joblib')
 loaded_dt = joblib.load('decision_tree_model.joblib')
@@ -29,7 +32,7 @@ st.title('Customer Segmentation')
 
 model_choice = st.selectbox('Select Model', ('XGBoost', 'Decision Tree'))
 
-gender = st.select_slider('Gender', [0, 1], format_func=lambda x: 'Female' if x == 0 else 'Male')
+gender = st.selectbox('Gender', [0, 1], format_func=lambda x: 'Female' if x == 0 else 'Male')
 refund = st.number_input('Refund', min_value=0, max_value=9999999, value=0)
 wallet_balance = st.number_input('Wallet Balance', min_value=0, max_value=9999999, value=0)
 
