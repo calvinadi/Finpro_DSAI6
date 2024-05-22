@@ -2,13 +2,7 @@ import streamlit as st
 import joblib
 import pandas as pd
 import numpy as np
-
-# Load the cleaned data
-df = pd.read_csv(r'/workspaces/Finpro_DSAI6/cleaned_df.csv')
-
-# Load your models
-loaded_xgb = joblib.load('xgb_model.joblib')
-loaded_dt = joblib.load('decision_tree_model.joblib')
+from sklearn.preprocessing import MinMaxScaler
 
 # Label mapping
 label_mapping = {
@@ -32,92 +26,103 @@ st.title('Customer Segmentation')
 
 model_choice = st.selectbox('Select Model', ('XGBoost', 'Decision Tree'))
 
-gender = st.selectbox('Gender', [0, 1], format_func=lambda x: 'Female' if x == 0 else 'Male')
-refund = st.number_input('Refund', min_value=0, max_value=9999999, value=0)
-wallet_balance = st.number_input('Wallet Balance', min_value=0, max_value=9999999, value=0)
+# Collects user input features into dataframe
+uploaded_file = st.sidebar.file_uploader("Upload your input CSV file", type=["csv"])
+if uploaded_file is not None:
+    input_df = pd.read_csv(uploaded_file)
+else:
+    def user_input_features():
+        gender_encoded = st.selectbox('Gender', [0, 1], format_func=lambda x: 'Female' if x == 0 else 'Male')
+        refund = st.number_input('Refund', min_value=0, max_value=9999999, value=0)
+        wallet_balance = st.number_input('Wallet Balance', min_value=0, max_value=9999999, value=0)
+        # List of products
+        products = [
+            'None', 'Man Fashion', 'Woman Fashion', 'Food & Drink', 'Ride Hailing',
+            'Keperluan Rumah Tangga', 'Travel', 'Keperluan Anak', 'Elektronik', 'Other',
+            'Transportasi (Kereta Pesawat Kapal)', 'Top Up Game', 'Otomotif', 'Pulsa',
+            'Kesehatan', 'Investasi', 'Sewa Motor/Mobil', 'Hotel', 'Tagihan (WIFI PLN)'
+        ]
 
-# List of products
-products = [
-    'None', 'Man Fashion', 'Woman Fashion', 'Food & Drink', 'Ride Hailing',
-    'Keperluan Rumah Tangga', 'Travel', 'Keperluan Anak', 'Elektronik', 'Other',
-    'Transportasi (Kereta Pesawat Kapal)', 'Top Up Game', 'Otomotif', 'Pulsa',
-    'Kesehatan', 'Investasi', 'Sewa Motor/Mobil', 'Hotel', 'Tagihan (WIFI PLN)'
-]
+        # Function to format product names
+        def product_format_func(x):
+            return products[x]
 
-# Function to format product names
-def product_format_func(x):
-    return products[x]
+        # Slider for most bought product
+        most_bought_product = st.selectbox(
+            'Most Bought Product',
+            options=list(range(len(products))),
+            format_func=product_format_func
+        )
 
-# Slider for most bought product
-most_bought_product = st.selectbox(
-    'Most Bought Product',
-    options=list(range(len(products))),
-    format_func=product_format_func
-)
+        st.write(f'You selected: {products[most_bought_product]}')
 
-st.write(f'You selected: {products[most_bought_product]}')
+        total_gross_amount = st.number_input('Total Gross Amount', min_value=0, max_value=9999999, value=0)
+        total_discount_amount = st.number_input('Total Discount Amount', min_value=0, max_value=9999999, value=0)
+        recency = st.number_input('Recency', min_value=0, max_value=1000, value=0)
+        frequency = st.number_input('Frequency', min_value=0, max_value=1000, value=0)
+        monetary = st.number_input('Monetary', min_value=0, max_value=9999999, value=0)
 
-total_gross_amount = st.number_input('Total Gross Amount', min_value=0, max_value=9999999, value=0)
-total_discount_amount = st.number_input('Total Discount Amount', min_value=0, max_value=9999999, value=0)
-recency = st.number_input('Recency', min_value=0, max_value=1000, value=0)
-frequency = st.number_input('Frequency', min_value=0, max_value=1000, value=0)
-monetary = st.number_input('Monetary', min_value=0, max_value=9999999, value=0)
+        data = {'gender_encoded': gender_encoded,
+                'refund': refund,
+                'wallet_balance': wallet_balance,
+                'most_bought_product': most_bought_product,
+                'total_gross_amount': total_gross_amount,
+                'total_discount_amount': total_discount_amount,
+                'recency': recency,
+                'frequency': frequency,
+                'monetary': monetary
+                }
+        features = pd.DataFrame(data, index=[0])
+        return features
+    input_df = user_input_features()
 
+# Combines user input with the cleaned df
 
-# #mean dan std untuk normalisasi
-# mean_refund = 219645.656946
-# std_refund = 138415.960681
+## Load the cleaned data
+df_raw = pd.read_csv(r'/workspaces/Finpro_DSAI6/cleaned_df.csv')
+df_independent = df_raw.drop(columns=['customer_tier_encoded'])
 
-# mean_wallet_balance = 635833.2
-# std_wallet_balance = 244845
+# Membersihkan nama kolom di df_independent dari spasi tambahan
+df_independent.columns = df_independent.columns.str.strip()
 
-# mean_total_gross_amount = 1455557
-# std_total_gross_amount = 356688.3
+# Combine user input with the cleaned df
+df = pd.concat([input_df, df_independent], axis=0)
 
-# mean_total_discount_amount = 312150.6
-# std_total_discount_amount = 147689.6
+# Selects only the first row (the user input data)
+df_input = df[:1]
 
-# mean_monetary = 1903694
-# std_monetary = 316727.8
+# Displays the user input features
+st.subheader('User Input features')
 
+if uploaded_file is not None:
+    st.write(df_input)
+else:
+    st.write('Awaiting CSV file to be uploaded. Currently using example input parameters (shown below).')
+    st.write(df_input)
 
-# # Normalize input based on test set statistics
-# normalized_refund = (refund - mean_refund) / std_refund
-# normalized_wallet_balance = (wallet_balance - mean_wallet_balance) / std_wallet_balance
-# normalized_total_gross_amount = (total_gross_amount - mean_total_gross_amount) / std_total_gross_amount
-# normalized_total_discount_amount = (total_discount_amount - mean_total_discount_amount) / std_total_discount_amount
-# normalized_monetary = (monetary - mean_monetary) / std_monetary
-
-# # Prepare input data for prediction
-# input_data = np.array([[gender, normalized_refund, normalized_wallet_balance, 
-#                         most_bought_product,normalized_total_gross_amount, 
-#                         normalized_total_discount_amount, recency, 
-#                         frequency, normalized_monetary]])
-
-from sklearn.preprocessing import MinMaxScaler
-
+## load the scaler
 min_max_scaler = joblib.load('min_max_scaler.joblib')
 std_scaler = joblib.load('std_scaler.joblib')
 
+df[["refund", "wallet_balance", "total_gross_amount",
+         "total_discount_amount", "monetary"]] = min_max_scaler.fit_transform(df[["refund", 
+         "wallet_balance", "total_gross_amount",
+         "total_discount_amount", "monetary"]])
 
-input_data = np.array([[gender, refund, wallet_balance, most_bought_product,
-                        total_gross_amount, total_discount_amount, recency, frequency, monetary]])
+df_std=std_scaler.fit_transform(df)
 
-columns = ['gender_encoded', 'refund', 'wallet_balance', 'most_bought_product',
-           'total_gross_amount', 'total_discount_amount', 'recency', 'frequency', 'monetary']
-input_df = pd.DataFrame(input_data, columns=columns)
 
-# Apply MinMaxScaler to the relevant features
-features_to_minmax_scale = ['refund', 'wallet_balance', 'total_gross_amount', 'total_discount_amount', 'monetary']
-input_df[features_to_minmax_scale] = min_max_scaler.transform(input_df[features_to_minmax_scale])
+# Load the models
+loaded_xgb = joblib.load('xgb_model.joblib')
+loaded_dt = joblib.load('decision_tree_model.joblib')
 
-input_data_std_scaled = std_scaler.transform(input_df)
+
 
 # Perform prediction on button click
 if st.button('Predict'):
     if model_choice == 'XGBoost':
-        result = predict(loaded_xgb, input_data_std_scaled)
+        result = predict(loaded_xgb, df_std)
     elif model_choice == 'Decision Tree':
-        result = predict(loaded_dt, input_data_std_scaled)
+        result = predict(loaded_dt, df_std)
 
     st.write(f'Prediction: {result}')
