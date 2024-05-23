@@ -25,7 +25,12 @@ def predict(model, input_data):
 # Streamlit interface
 st.title('Customer Segmentation')
 
-model_choice = st.sidebar.selectbox('Select Model', ('XGBoost', 'Decision Tree'))
+model_choice = st.sidebar.selectbox('Select Model', ('XGBoost (Recommendation)', 
+                                                     'Decision Tree',
+                                                     'Random Forest',
+                                                     'SVM',
+                                                     'KNN',
+                                                     'Naive Bayes'))
 
 # Collects user input features into dataframe
 uploaded_file = st.sidebar.file_uploader("Upload your input CSV file", type=["csv"])
@@ -116,15 +121,27 @@ df_std=std_scaler.fit_transform(df)
 # Load the models
 loaded_xgb = joblib.load('xgb_model.joblib')
 loaded_dt = joblib.load('decision_tree_model.joblib')
+loaded_rf = joblib.load('randomforest_model.joblib')
+loaded_svm = joblib.load('svm.joblib')
+loaded_knn = joblib.load('knn.joblib')
+loaded_nb = joblib.load('nb.joblib')
 
 
 
 # Perform prediction on button click
 if st.sidebar.button('Predict'):
-    if model_choice == 'XGBoost':
+    if model_choice == 'XGBoost (Recommendation)':
         result,probabilities = predict(loaded_xgb, df_std)
     elif model_choice == 'Decision Tree':
         result,probabilities = predict(loaded_dt, df_std)
+    elif model_choice == 'Random Forest':
+        result,probabilities = predict(loaded_rf, df_std)
+    elif model_choice == 'SVM':
+        result,probabilities = predict(loaded_svm, df_std)
+    elif model_choice == 'KNN':
+        result,probabilities = predict(loaded_knn, df_std)
+    elif model_choice == 'Naive Bayes':
+        result,probabilities = predict(loaded_nb, df_std)    
 
     st.sidebar.write(f'Prediction: {result}')
 
