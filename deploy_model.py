@@ -19,12 +19,13 @@ label_mapping = {
 def predict(model, input_data):
     prediction = model.predict(input_data)
     predicted_label = label_mapping.get(prediction[0])
-    return predicted_label
+    probabilities = model.predict_proba(input_data)[0]
+    return predicted_label, probabilities
 
 # Streamlit interface
 st.title('Customer Segmentation')
 
-model_choice = st.selectbox('Select Model', ('XGBoost', 'Decision Tree'))
+model_choice = st.sidebar.selectbox('Select Model', ('XGBoost', 'Decision Tree'))
 
 # Collects user input features into dataframe
 uploaded_file = st.sidebar.file_uploader("Upload your input CSV file", type=["csv"])
@@ -119,10 +120,18 @@ loaded_dt = joblib.load('decision_tree_model.joblib')
 
 
 # Perform prediction on button click
-if st.button('Predict'):
+if st.sidebar.button('Predict'):
     if model_choice == 'XGBoost':
-        result = predict(loaded_xgb, df_std)
+        result,probabilities = predict(loaded_xgb, df_std)
     elif model_choice == 'Decision Tree':
-        result = predict(loaded_dt, df_std)
+        result,probabilities = predict(loaded_dt, df_std)
 
-    st.write(f'Prediction: {result}')
+    st.sidebar.write(f'Prediction: {result}')
+    
+    # Display prediction probabilities with smaller font
+    st.sidebar.markdown('**Prediction Probabilities:**')
+    probabilities_html = "<ul>"
+    for i, prob in enumerate(probabilities):
+        probabilities_html += f"<li style='font-size: 12px;'>{label_mapping[i]}: {prob:.4f}</li>"
+    probabilities_html += "</ul>"
+    st.sidebar.markdown(probabilities_html, unsafe_allow_html=True)
