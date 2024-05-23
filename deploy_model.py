@@ -3,7 +3,6 @@ import joblib
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
-# from tensorflow.keras.models import load_model
 
 # Label mapping
 label_mapping = {
@@ -19,8 +18,8 @@ label_mapping = {
 # Function to perform prediction based on selected model and input data
 def predict(model, input_data):
     prediction = model.predict(input_data)
-    predicted_label = label_mapping.get(prediction[0])
-    probabilities = model.predict_proba(input_data)[0]
+    predicted_label = [label_mapping.get(pred) for pred in prediction]
+    probabilities = model.predict_proba(input_data)
     return predicted_label, probabilities
 
 # Streamlit interface
@@ -34,6 +33,7 @@ model_choice = st.sidebar.selectbox('Select Model', ('XGBoost (Recommendation)',
 uploaded_file = st.sidebar.file_uploader("Upload your input CSV file", type=["csv"])
 if uploaded_file is not None:
     input_df = pd.read_csv(uploaded_file)
+    is_file_uploaded = True
 else:
     def user_input_features():
         gender_encoded = st.selectbox('Gender', [0, 1], format_func=lambda x: 'Female' if x == 0 else 'Male')
@@ -78,24 +78,29 @@ else:
                 }
         features = pd.DataFrame(data, index=[0])
         return features
-    input_df = user_input_features()
 
-# Combines user input with the cleaned df
+    input_df = user_input_features()
+    is_file_uploaded = False
+
+# Combine user input with the cleaned df
 
 ## Load the cleaned data
 df_raw = pd.read_csv('cleaned_df.csv')
 df_independent = df_raw.drop(columns=['customer_tier_encoded'])
 
-# Membersihkan nama kolom di df_independent dari spasi tambahan
+# Clean column names in df_independent from extra spaces
 df_independent.columns = df_independent.columns.str.strip()
 
 # Combine user input with the cleaned df
 df = pd.concat([input_df, df_independent], axis=0)
 
-# Selects only the first row (the user input data)
-df_input = df[:1]
+# Selects only the user input data
+if is_file_uploaded:
+    df_input = input_df
+else:
+    df_input = df[:1]
 
-# Displays the user input features
+# Display the user input features
 st.subheader('User Input features')
 
 if uploaded_file is not None:
@@ -104,51 +109,37 @@ else:
     st.write('Awaiting CSV file to be uploaded. Currently using example input parameters (shown below).')
     st.write(df_input)
 
-## load the scaler
+## Load the scaler
 min_max_scaler = joblib.load('min_max_scaler.joblib')
 std_scaler = joblib.load('std_scaler.joblib')
 
-df[["refund", "wallet_balance", "total_gross_amount",
-         "total_discount_amount", "monetary"]] = min_max_scaler.fit_transform(df[["refund", 
+df_input[["refund", "wallet_balance", "total_gross_amount",
+         "total_discount_amount", "monetary"]] = min_max_scaler.transform(df_input[["refund", 
          "wallet_balance", "total_gross_amount",
          "total_discount_amount", "monetary"]])
 
-df_std=std_scaler.fit_transform(df)
-
+df_std = std_scaler.transform(df_input)
 
 # Load the models
 loaded_xgb = joblib.load('xgb_model.joblib')
 loaded_dt = joblib.load('decision_tree_model.joblib')
 loaded_rf = joblib.load('randomforest_model.joblib')
-# loaded_svm = joblib.load('svm.joblib')
-# loaded_knn = joblib.load('knn.joblib')
-# loaded_nb = joblib.load('nb.joblib')
-# loaded_nn = load_model('bestmodel_NN.keras')
-
 
 # Perform prediction on button click
 if st.sidebar.button('Predict'):
     if model_choice == 'XGBoost (Recommendation)':
-        result,probabilities = predict(loaded_xgb, df_std)
+        result, probabilities = predict(loaded_xgb, df_std)
     elif model_choice == 'Decision Tree':
-        result,probabilities = predict(loaded_dt, df_std)
+        result, probabilities = predict(loaded_dt, df_std)
     elif model_choice == 'Random Forest':
-        result,probabilities = predict(loaded_rf, df_std)
-    # elif model_choice == 'SVM':
-    #     result,probabilities = predict(loaded_svm, df_std)
-    # elif model_choice == 'KNN':
-    #     result,probabilities = predict(loaded_knn, df_std)
-    # elif model_choice == 'Naive Bayes':
-    #     result,probabilities = predict(loaded_nb, df_std)    
-    # elif model_choice == 'Neural Network':
-    #     result,probabilities = predict_nn(loaded_nn, df_std)
+        result, probabilities = predict(loaded_rf, df_std)
 
-    st.sidebar.write(f'Prediction: {result}')
-
-    # Display prediction probabilities with smaller font
-    st.sidebar.markdown('**Prediction Probabilities:**')
-    probabilities_html = "<ul>"
-    for i, prob in enumerate(probabilities):
-        probabilities_html += f"<li style='font-size: 12px;'>{label_mapping[i]}: {prob:.4f}</li>"
-    probabilities_html += "</ul>"
-    st.sidebar.markdown(probabilities_html, unsafe_allow_html=True)
+    st.sidebar.write(f'Predictions:')
+    for i, (res, prob) in enumerate(zip(result, probabilities)):
+        st.sidebar.write(f'Row {i+1}: {res}')
+        st.sidebar.markdown('**Prediction Probabilities:**')
+        probabilities_html = "<ul>"
+        for j, p in enumerate(prob):
+            probabilities_html += f"<li style='font-size: 12px;'>{label_mapping[j]}: {p:.4f}</li>"
+        probabilities_html += "</ul>"
+        st.sidebar.markdown(probabilities_html, unsafe_allow_html=True)
