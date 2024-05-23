@@ -9,16 +9,16 @@ label_mapping = {
     0: 'At-Risk Customers',
     1: 'Best Customers',
     2: 'Churned Best Customers',
-    3: 'Lost Customers',
-    4: 'Lowest-Spending Active Loyal Customers',
-    5: 'High-Spending New Customers',
-
+    3: 'High-spending New Customers',
+    4: 'Lost Customers',
+    5: 'Others',
+    6: 'Lowest-Spending Active Loyal Customers'
 }
 
 # Function to perform prediction based on selected model and input data
 def predict(model, input_data):
     prediction = model.predict(input_data)
-    predicted_label = label_mapping.get(prediction[0], 'Others')  # Default to 'Others' if not found
+    predicted_label = label_mapping.get(prediction[0])
     return predicted_label
 
 # Streamlit interface
