@@ -80,7 +80,7 @@ else:
 # Combines user input with the cleaned df
 
 ## Load the cleaned data
-df_raw = pd.read_csv(r'/workspaces/Finpro_DSAI6/cleaned_df.csv')
+df_raw = pd.read_csv('cleaned_df.csv')
 df_independent = df_raw.drop(columns=['customer_tier_encoded'])
 
 # Membersihkan nama kolom di df_independent dari spasi tambahan
