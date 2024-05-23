@@ -2,7 +2,6 @@ import streamlit as st
 import joblib
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler
 
 # Label mapping
 label_mapping = {
@@ -127,7 +126,7 @@ if st.sidebar.button('Predict'):
         result,probabilities = predict(loaded_dt, df_std)
 
     st.sidebar.write(f'Prediction: {result}')
-    
+
     # Display prediction probabilities with smaller font
     st.sidebar.markdown('**Prediction Probabilities:**')
     probabilities_html = "<ul>"
