@@ -25,8 +25,8 @@ def predict(model, input_data):
 # Streamlit interface
 st.title('Customer Segmentation')
 
-model_choice = st.sidebar.selectbox('Select Model', ('XGBoost (Recommendation)', 
-                                                     'Decision Tree',
+model_choice = st.sidebar.selectbox('Select Model', ('Decision Tree (Recommendation)',
+                                                     'XGBoost',
                                                      'Random Forest'))
 
 # Collects user input features into dataframe
