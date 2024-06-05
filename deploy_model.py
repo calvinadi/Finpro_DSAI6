@@ -127,9 +127,9 @@ loaded_rf = joblib.load('randomforest_model.joblib')
 
 # Perform prediction on button click
 if st.sidebar.button('Predict'):
-    if model_choice == 'XGBoost (Recommendation)':
+    if model_choice == 'XGBoost':
         result, probabilities = predict(loaded_xgb, df_std)
-    elif model_choice == 'Decision Tree':
+    elif model_choice == 'Decision Tree (Recommendation)':
         result, probabilities = predict(loaded_dt, df_std)
     elif model_choice == 'Random Forest':
         result, probabilities = predict(loaded_rf, df_std)
