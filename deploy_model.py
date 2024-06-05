@@ -60,11 +60,11 @@ else:
 
         st.write(f'You selected: {products[most_bought_product]}')
 
-        total_gross_amount = st.number_input('Total Gross Amount', min_value=0, max_value=9999999, value=0)
-        total_discount_amount = st.number_input('Total Discount Amount', min_value=0, max_value=9999999, value=0)
+        total_gross_amount = st.number_input('Total Gross Amount', min_value=0, max_value=99999999, value=0)
+        total_discount_amount = st.number_input('Total Discount Amount', min_value=0, max_value=99999999, value=0)
         recency = st.number_input('Recency', min_value=0, max_value=1000, value=0)
         frequency = st.number_input('Frequency', min_value=0, max_value=1000, value=0)
-        monetary = st.number_input('Monetary', min_value=0, max_value=9999999, value=0)
+        monetary = st.number_input('Monetary', min_value=0, max_value=999999999, value=0)
 
         data = {'gender_encoded': gender_encoded,
                 'refund': refund,
