@@ -4,6 +4,11 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 
+from tensorflow.keras.models import load_model
+
+# Load the neural network model
+loaded_nn_model = load_model('bestmodel_NN.keras')
+
 # Label mapping
 label_mapping = {
     0: 'At-Risk Customers',
