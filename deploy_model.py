@@ -98,7 +98,7 @@ df = pd.concat([input_df, df_independent], axis=0)
 if is_file_uploaded:
     df_input = input_df
 else:
-    df_input = df[:1]
+    df_input = df.iloc[:1, :]
 
 # Display the user input features
 st.subheader('User Input features')
@@ -113,7 +113,7 @@ else:
 min_max_scaler = joblib.load('min_max_scaler.joblib')
 std_scaler = joblib.load('std_scaler.joblib')
 
-df_input[["refund", "wallet_balance", "total_gross_amount",
+df_input.loc[:, ["refund", "wallet_balance", "total_gross_amount",
          "total_discount_amount", "monetary"]] = min_max_scaler.transform(df_input[["refund", 
          "wallet_balance", "total_gross_amount",
          "total_discount_amount", "monetary"]])
