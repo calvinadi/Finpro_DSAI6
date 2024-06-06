@@ -11,8 +11,8 @@ label_mapping = {
     2: 'Churned Best Customers',
     3: 'High-spending New Customers',
     4: 'Lost Customers',
-    5: 'Others',
-    6: 'Lowest-Spending Active Loyal Customers'
+    5: 'Lowest-Spending Active Loyal Customers',
+    6: 'Others'
 }
 
 # Function to perform prediction based on selected model and input data
